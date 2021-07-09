@@ -150,32 +150,10 @@ function NewsDetail() {
     container.innerHTML = template.replace("{{__comments__}}", makeComment(newsContent.comments));
 }
 
-function run(){
-    const ws = new WebSocket("wss://api.upbit.com/websocket/v1");
-    try{
-        ws.onopen = () => {
-            ws.send(`[{"ticket":"test"},{"type":"ticker","codes":["KRW-BTC"]}]`);
-        }
-        ws.onmessage = async (e) => {
-            const { data } = e;
-            const text = new Response(data).text();
-            console.log(text);
-        }
-        ws.onerror = e => {
-            console.log(e);
-        }
-        //ws.close();
-    }catch(e){
-        console.log(e);
-    }
-    
-}
-
 function router(){
     const routePath = location.hash;
     if(routePath === ''){
         NewsFeed();
-        run();
     }else if(routePath.indexOf('#/page/') >= 0){
         store.currentPage = Number(routePath.substr(7));
         NewsFeed();

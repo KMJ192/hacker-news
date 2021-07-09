@@ -5,7 +5,9 @@
   "dependencies": {
     "parcel-bundler": "^1.12.5"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "typescript": "^4.3.5"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

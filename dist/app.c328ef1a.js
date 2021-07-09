@@ -118,10 +118,6 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   return newRequire;
 })({"app.js":[function(require,module,exports) {
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
 var container = document.getElementById('root');
 var ajax = new XMLHttpRequest();
 var NEWS_URL = 'http://api.hnpwa.com/v0/news/1.json';
@@ -196,53 +192,11 @@ function NewsDetail() {
   container.innerHTML = template.replace("{{__comments__}}", makeComment(newsContent.comments));
 }
 
-function run() {
-  var ws = new WebSocket("wss://api.upbit.com/websocket/v1");
-
-  try {
-    ws.onopen = function () {
-      ws.send("[{\"ticket\":\"test\"},{\"type\":\"ticker\",\"codes\":[\"KRW-BTC\"]}]");
-    };
-
-    ws.onmessage = /*#__PURE__*/function () {
-      var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(e) {
-        var data, text;
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                data = e.data;
-                text = new Response(data).text();
-                console.log(text);
-
-              case 3:
-              case "end":
-                return _context.stop();
-            }
-          }
-        }, _callee);
-      }));
-
-      return function (_x) {
-        return _ref.apply(this, arguments);
-      };
-    }();
-
-    ws.onerror = function (e) {
-      console.log(e);
-    }; //ws.close();
-
-  } catch (e) {
-    console.log(e);
-  }
-}
-
 function router() {
   var routePath = location.hash;
 
   if (routePath === '') {
     NewsFeed();
-    run();
   } else if (routePath.indexOf('#/page/') >= 0) {
     store.currentPage = Number(routePath.substr(7));
     NewsFeed();
@@ -281,7 +235,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51217" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64584" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
