@@ -1,20 +1,33 @@
-type Store = {
+interface Store {
     currentPage: number;
     feeds: NewsFeed[];
 }
-type NewsFeed = {
-    id: number;
-    comments_count: number;
-    url: string;
-    user: string;
-    time_ago: string;
-    points: number;
-    title: string;
+
+interface News {
+    readonly id: number;
+    readonly time_ago: string;
+    readonly title: string;
+    readonly url: string;
+    readonly user: string;
+    readonly contents: string
+}
+
+interface NewsFeed extends News {
+    readonly comments_count: number;
+    readonly points: number;
     read?: boolean;
 }
 
+interface NewsDetail extends News {
+    readonly comments: NewsComment[];
+}
+interface NewsComment extends News {
+    readonly comments: NewsComment[];
+    readonly level: number;
+}
+
 const container: HTMLElement | null = document.getElementById('root');
-let ajax: XMLHttpRequest = new XMLHttpRequest();
+//let ajax: XMLHttpRequest = new XMLHttpRequest();
 const NEWS_URL = 'http://api.hnpwa.com/v0/news/1.json';
 const CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json';
 
@@ -23,27 +36,59 @@ const store: Store = {
     feeds: []
 };
 
-function getData(method: string, url: string, async: boolean){
-    ajax.open(method, url, async);
-    ajax.send();
+class Api{
+    ajax: XMLHttpRequest;
+    url: string;
+    method: string;
+    async: boolean;
+    constructor(method: string, url: string, async: boolean){
+        this.url = url;
+        this.method = method;
+        this.async = async;
+        this.ajax = new XMLHttpRequest();
+    }
 
-    return JSON.parse(ajax.response);
+    protected getRequest<AjaxResposne>():AjaxResposne{
+        const ajax = new XMLHttpRequest();
+        ajax.open(this.method, this.url, this.async);
+        this.ajax.send();
+        return JSON.parse(this.ajax.response);
+    }
 }
 
-function makeFeeds(feeds: NewsFeed[]){
+class NewsFeedApi extends Api{
+    getData(): NewsFeed[]{
+        return this.getRequest<NewsFeed[]>();
+    }
+}
+
+class NewsDetailApi extends Api{
+    getData(): NewsDetail{
+        return this.getRequest<NewsDetail>();
+    }
+}
+
+// function getData<T>(method: string, url: string, async: boolean): T{
+//     ajax.open(method, url, async);
+//     ajax.send();
+//     return JSON.parse(ajax.response);
+// }
+
+function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
     for(let i = 0; i < feeds.length; i++){
         feeds[i].read = false;
     }
     return feeds;
 }
 
-function updateView(html: string){
+function updateView(html: string): void{
     if(container) container.innerHTML = html;
     else console.error("최상위 컨테이너가 없습니다.");
 }
 
-function newsFeed() {
+function newsFeed(): void {
     //const newsFeed = getData("GET", NEWS_URL, false);
+    const api = new NewsFeedApi("GET", NEWS_URL, false);
     let newsFeed: NewsFeed[] = store.feeds;
     const newsList = [];
     let template = `
@@ -72,29 +117,31 @@ function newsFeed() {
     `;
     
     if(newsFeed.length === 0){
-        newsFeed = store.feeds = makeFeeds(getData("GET", NEWS_URL, false));
+        //newsFeed = store.feeds = makeFeeds(getData<NewsFeed[]>("GET", NEWS_URL, false));
+        newsFeed = store.feeds = makeFeeds(api.getData());
     }
 
     for(let i = (store.currentPage - 1) * 10; i < (store.currentPage * 10); i++){
+        const nf = newsFeed[i];
         newsList.push(`
-            <div class="p-6 ${newsFeed[i].read ? 'bg-red-500' : 'bg-white'} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
+            <div class="p-6 ${nf.read ? 'bg-red-500' : 'bg-white'} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
                 <div class="flex">
                     <div class="flex-auto">
-                        <a href="#/show/${newsFeed[i].id}">
-                            ${newsFeed[i].title}
+                        <a href="#/show/${nf.id}">
+                            ${nf.title}
                         </a>
                     </div>
                     <div class="text-center text-sm">
                         <div class="w-10 text-white bg-green-300 rounded-lg px-0 py-2">
-                            ${newsFeed[i].comments_count}
+                            ${nf.comments_count}
                         </div>
                     </div>
                 </div>
                 <div class="flex mt-3">
                     <div class="grid grid-cols-3 text-sm text-gray-500">
-                        <div><i class="fas fa-user mr-l">${newsFeed[i].user}</i></div>
-                        <div><i class="fas fa-heart mr-l">${newsFeed[i].points}</i></div>
-                        <div><i class="fas fa-clock mr-l">${newsFeed[i].time_ago}</i></div>
+                        <div><i class="fas fa-user mr-l">${nf.user}</i></div>
+                        <div><i class="fas fa-heart mr-l">${nf.points}</i></div>
+                        <div><i class="fas fa-clock mr-l">${nf.time_ago}</i></div>
                     </div>
                 </div>
             </div>
@@ -102,16 +149,18 @@ function newsFeed() {
     }
 
     template = template.replace("{{__news_feed__}}", newsList.join(''));
-    template = template.replace("{{__prev_page__}}", store.currentPage > 1 ? store.currentPage - 1 : 1);
-    template = template.replace("{{__next_page__}}", store.currentPage < 3 ? store.currentPage + 1 : store.currentPage = 3);
+    template = template.replace("{{__prev_page__}}", store.currentPage > 1 ? String(store.currentPage - 1) : String(1));
+    template = template.replace("{{__next_page__}}", String(store.currentPage + 1));
+    //template = template.replace("{{__next_page__}}", store.currentPage < 3 ? String(store.currentPage + 1) : String(store.currentPage = 3));
     //template = template.replace("{{__next_page__}}", store.currentPage + 1);
     updateView(template);
     
 }
 
-function newsDetail() {
+function newsDetail(): void {
     const id = location.hash.substr(7);
-    const newsContent = getData("GET", CONTENT_URL.replace('@id', id), false);
+    const api = new NewsDetailApi("GET", CONTENT_URL.replace('@id', id), false);
+    const newsContent = api.getData();
     let template = `
         <div class="bg-gray-600 min-h-screnn pb-8">
             <div class="bg-white text-xl">
@@ -133,7 +182,7 @@ function newsDetail() {
                     ${newsContent.title}
                 </h2>
                 <div class="text-gray-400 h-20">
-                    ${newsContent.content}
+                    ${newsContent.contents}
                 </div>
                 {{__comments__}}
             </div>
@@ -147,21 +196,21 @@ function newsDetail() {
         }
     }
 
-    function makeComment(comments, called = 0){
+    function makeComment(comments: NewsComment[]): string{
         const commentString = [];
         for(let i = 0; i < comments.length; i++){
             commentString.push(`
-                <div style="padding-left: ${called * 40}px;" class="mt-4">
+                <div style="padding-left: ${comments[i].level * 40}px;" class="mt-4">
                     <div class="text-gray-400">
                         <i class="fa fa-sort-up mr-2"></i>
                         <strong>${comments[i].user}</strong> ${comments[i].time_ago}
                     </div>
-                    <p class="text-gray-700">${comments[i].content}</p>
+                    <p class="text-gray-700">${comments[i].contents}</p>
                 </div>
             `);
 
             if(comments[i].comments.length > 0){
-                commentString.push(makeComment(comments[i].comments, called + 1));
+                commentString.push(makeComment(comments[i].comments));
             }
         }
         return commentString.join('');
@@ -169,7 +218,27 @@ function newsDetail() {
     updateView(template.replace("{{__comments__}}", makeComment(newsContent.comments)));
 }
 
-function router(){
+function makeComment(comments: NewsComment[]): string{
+    const commentString = [];
+    for(let i = 0; i < comments.length; i++){
+        const comment: NewsComment = comments[i];
+        commentString.push(`
+            <div style="padding-left: ${comment.level * 40}px;" class="mt-4">
+                <div class="text-gray-400">
+                    <i class="fa fa-sort-up mr-2"></i>
+                    <strong>${comment.user}</strong> ${comment.time_ago}
+                </div>
+                <p class="text-gray-700">${comment.contents}</p>
+            </div>
+        `);
+        if(comment.comments.length > 0){
+            commentString.push(makeComment(comment.comments));
+        }
+    }
+    return commentString.join('');
+}
+
+function router(): void{
     const routePath = location.hash;
     if(routePath === ''){
         newsFeed();
