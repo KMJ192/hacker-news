@@ -35,8 +35,8 @@ const store: Store = {
     feeds: []
 };
 
-function applyApiMixins(targetClass: any, baseClass: any){
-    baseClass.forEach(baseClass => {
+function applyApiMixins(targetClass: any, baseClasses: any){
+    baseClasses.forEach((baseClass: any) => {
         Object.getOwnPropertyNames(baseClass.prototype).forEach(name => {
             const descriptor = Object.getOwnPropertyDescriptor(baseClass.prototype, name);
             if(descriptor){
@@ -55,13 +55,13 @@ class Api{
     }
 }
 
-class NewsFeedApi extends Api{
+class NewsFeedApi{
     getData(): NewsFeed[]{
         return this.getRequest<NewsFeed[]>("GET", NEWS_URL, false);
     }
 }
 
-class NewsDetailApi extends Api{
+class NewsDetailApi{
     getData(id: string): NewsDetail{
         return this.getRequest<NewsDetail>("GET", CONTENT_URL.replace('@id', id), false);
     }
@@ -70,8 +70,10 @@ class NewsDetailApi extends Api{
 //mixin
 // first arg로 class
 // second arg로 첫번째class에 상속 시켜주는 class
-applyApiMixins(NewsFeedApi, Api);
-applyApiMixins(NewsDetailApi, Api);
+interface NewsFeedApi extends Api {};
+interface NewsDetailApi extends Api {};
+applyApiMixins(NewsFeedApi, [Api]);
+applyApiMixins(NewsDetailApi, [Api]);
 
 function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
     for(let i = 0; i < feeds.length; i++){
