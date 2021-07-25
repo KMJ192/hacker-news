@@ -27,7 +27,6 @@ interface NewsComment extends News {
 }
 
 const container: HTMLElement | null = document.getElementById('root');
-//let ajax: XMLHttpRequest = new XMLHttpRequest();
 const NEWS_URL = 'http://api.hnpwa.com/v0/news/1.json';
 const CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json';
 
@@ -36,43 +35,43 @@ const store: Store = {
     feeds: []
 };
 
-class Api{
-    ajax: XMLHttpRequest;
-    url: string;
-    method: string;
-    async: boolean;
-    constructor(method: string, url: string, async: boolean){
-        this.url = url;
-        this.method = method;
-        this.async = async;
-        this.ajax = new XMLHttpRequest();
-    }
+function applyApiMixins(targetClass: any, baseClass: any){
+    baseClass.forEach(baseClass => {
+        Object.getOwnPropertyNames(baseClass.prototype).forEach(name => {
+            const descriptor = Object.getOwnPropertyDescriptor(baseClass.prototype, name);
+            if(descriptor){
+                Object.defineProperty(targetClass.prototype, name, descriptor);
+            }
+        });
+    });
+}
 
-    protected getRequest<AjaxResposne>():AjaxResposne{
+class Api{
+    protected getRequest<AjaxResposne>(method: string, url: string, async: boolean): AjaxResposne{
         const ajax = new XMLHttpRequest();
-        ajax.open(this.method, this.url, this.async);
-        this.ajax.send();
-        return JSON.parse(this.ajax.response);
+        ajax.open(method, url, async);
+        ajax.send();
+        return JSON.parse(ajax.response);
     }
 }
 
 class NewsFeedApi extends Api{
     getData(): NewsFeed[]{
-        return this.getRequest<NewsFeed[]>();
+        return this.getRequest<NewsFeed[]>("GET", NEWS_URL, false);
     }
 }
 
 class NewsDetailApi extends Api{
-    getData(): NewsDetail{
-        return this.getRequest<NewsDetail>();
+    getData(id: string): NewsDetail{
+        return this.getRequest<NewsDetail>("GET", CONTENT_URL.replace('@id', id), false);
     }
 }
 
-// function getData<T>(method: string, url: string, async: boolean): T{
-//     ajax.open(method, url, async);
-//     ajax.send();
-//     return JSON.parse(ajax.response);
-// }
+//mixin
+// first arg로 class
+// second arg로 첫번째class에 상속 시켜주는 class
+applyApiMixins(NewsFeedApi, Api);
+applyApiMixins(NewsDetailApi, Api);
 
 function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
     for(let i = 0; i < feeds.length; i++){
@@ -88,7 +87,7 @@ function updateView(html: string): void{
 
 function newsFeed(): void {
     //const newsFeed = getData("GET", NEWS_URL, false);
-    const api = new NewsFeedApi("GET", NEWS_URL, false);
+    const api = new NewsFeedApi();
     let newsFeed: NewsFeed[] = store.feeds;
     const newsList = [];
     let template = `
@@ -159,8 +158,8 @@ function newsFeed(): void {
 
 function newsDetail(): void {
     const id = location.hash.substr(7);
-    const api = new NewsDetailApi("GET", CONTENT_URL.replace('@id', id), false);
-    const newsContent = api.getData();
+    const api = new NewsDetailApi();
+    const newsContent = api.getData(id);
     let template = `
         <div class="bg-gray-600 min-h-screnn pb-8">
             <div class="bg-white text-xl">
@@ -199,18 +198,19 @@ function newsDetail(): void {
     function makeComment(comments: NewsComment[]): string{
         const commentString = [];
         for(let i = 0; i < comments.length; i++){
+            const comment = comments[i];
             commentString.push(`
-                <div style="padding-left: ${comments[i].level * 40}px;" class="mt-4">
+                <div style="padding-left: ${comment.level * 40}px;" class="mt-4">
                     <div class="text-gray-400">
                         <i class="fa fa-sort-up mr-2"></i>
-                        <strong>${comments[i].user}</strong> ${comments[i].time_ago}
+                        <strong>${comment.user}</strong> ${comment.time_ago}
                     </div>
-                    <p class="text-gray-700">${comments[i].contents}</p>
+                    <p class="text-gray-700">${comment.contents}</p>
                 </div>
             `);
 
-            if(comments[i].comments.length > 0){
-                commentString.push(makeComment(comments[i].comments));
+            if(comment.comments.length > 0){
+                commentString.push(makeComment(comment.comments));
             }
         }
         return commentString.join('');
