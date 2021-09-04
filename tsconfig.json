@@ -1,12 +1,22 @@
 {
-    "compilerOptions": {
-        "strict": true,
-        "target": "ES5",
-        "module": "CommonJS",
-        "alwaysStrict": true,
-        "noImplicitAny": true,
-        "noImplicitThis": true,
-        "sourceMap": true,
-        "downlevelIteration": true
-    }
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES5",
+    "lib": [
+      "es2015",
+      "es2016",
+      "es2017",
+      "es6",
+      "es7",
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "module": "CommonJS",
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "sourceMap": true,
+    "downlevelIteration": true
+  }
 }
