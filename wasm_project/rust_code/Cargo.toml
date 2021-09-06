@@ -15,3 +15,11 @@ version = "0.3.5"
 
 [dependencies.web-sys]
 version = "0.3.5"
+features = [
+  'console',
+  'Document',
+  'Window',
+  'HtmlElement',
+  'XmlHttpRequestResponseType',
+  'XmlHttpRequest'
+]

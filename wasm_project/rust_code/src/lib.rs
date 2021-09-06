@@ -8,12 +8,9 @@ mod tests {
     }
 }
 
-#[wasm_bindgen]
-extern {
-    pub fn alert(s: &str);
-}
+pub mod api;
 
 #[wasm_bindgen]
-pub fn greet(name: &str) {
-    alert(&format!("{}", name));
+pub fn main(ajax: web_sys::XmlHttpRequest) {
+    web_sys::console::log_1(&ajax);
 }
