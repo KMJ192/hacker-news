@@ -2,3 +2,5 @@ node_modules
 dist
 .cache
 wasm_project/wasm/pkg
+yarn.lock
+package-lock.json
