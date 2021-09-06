@@ -4,3 +4,5 @@ dist
 wasm_project/wasm/pkg
 yarn.lock
 package-lock.json
+Cargo.lock
+target
