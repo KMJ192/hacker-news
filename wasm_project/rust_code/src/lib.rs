@@ -8,7 +8,9 @@ mod tests {
     }
 }
 
+pub mod document;
+use document::*;
 #[wasm_bindgen]
-pub fn main() {
+pub fn document() {
     
 }

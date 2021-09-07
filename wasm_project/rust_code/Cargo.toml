@@ -18,9 +18,8 @@ version = "0.3.5"
 version = "0.3.5"
 features = [
   'console',
-  'Document',
   'Window',
+  'Document',
   'HtmlElement',
-  'XmlHttpRequestResponseType',
-  'XmlHttpRequest'
+  'Node',
 ]
