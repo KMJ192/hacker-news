@@ -1,5 +1,6 @@
 function main() {
-  const ajax = new XMLHttpRequest();
-  import("../wasm_project/rust_code/pkg").then((module) => module.main(ajax));
+  import("../wasm_project/rust_code/pkg").then((module) => {
+    console.log(module.main());
+  });
 }
 main();

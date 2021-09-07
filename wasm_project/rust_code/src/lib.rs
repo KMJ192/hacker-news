@@ -8,9 +8,7 @@ mod tests {
     }
 }
 
-pub mod api;
-
 #[wasm_bindgen]
-pub fn main(ajax: web_sys::XmlHttpRequest) {
-    web_sys::console::log_1(&ajax);
+pub fn main() {
+    
 }
