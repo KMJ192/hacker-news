@@ -9,8 +9,9 @@ mod tests {
 }
 
 pub mod document;
-use document::*;
+use document::DocumentObject;
+
 #[wasm_bindgen]
-pub fn document() {
-    
+pub fn doc() -> DocumentObject {
+    DocumentObject::new()
 }
